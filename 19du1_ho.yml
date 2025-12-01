@@ -1,0 +1,73 @@
+# This example configuration outlines how to configure the srsRAN Project gNB to create a single TDD cell
+# transmitting in band 78, with 20 MHz bandwidth and 30 kHz sub-carrier-spacing. A USRP B200 is configured 
+# as the RF frontend using split 8. Note in this example an external clock source is not used, so the sync 
+# is not defined and the default is used. 
+
+gnb_id: 411                                                     #Optional UINT (411). Sets the numerical ID associated with the gNB.
+gnb_id_bit_length: 22
+gnb_du_id: 0
+ 
+f1ap:
+  cu_cp_addr: 127.0.10.1                   # The address of CU-CP
+  bind_addr: 127.0.10.2             
+
+f1u:
+  socket:
+    -
+      bind_addr: 127.0.10.2
+
+ru_sdr:
+  device_driver: uhd                                            # The RF driver name.
+  device_args: type=x300,addr=192.168.40.2,master_clock_rate=184320000,num_recv_frames=64,num_send_frames=64  # Optionally pass arguments to the selected RF driver
+  srate: 30.72                                                  # RF sample rate might need to be adjusted according to selected bandwidth..
+  tx_gain: 15                                                  # Transmit gain of the RF might need to adjusted to the given situation.
+  rx_gain: 10                                                 # Receive gain of the RF might need to adjusted to the given situation.
+  sync: external
+  clock: external
+  lo_offset: 45
+  time_alignment_calibration: 0
+  
+cell_cfg:
+  dl_arfcn: 632628                                                # ARFCN of the downlink carrier (center frequency).
+  #dl_arfcn: 640010
+  band: 78                                                        # The NR band.
+  channel_bandwidth_MHz: 20                                       # Bandwith in MHz. Number of PRBs will be automatically derived.
+  common_scs: 30                                                  # Subcarrier spacing in kHz used for data.
+  plmn: "00101"                                                   # PLMN broadcasted by the gNB.
+  tac: 7                                                          # Tracking area code (needs to match the core configuration).
+  pci: 7
+  sector_id: 0001                                                           #Physical cell ID.
+  nof_antennas_dl: 1
+  nof_antennas_ul: 1
+  pdsch:
+    mcs_table: qam256  
+
+e2:
+  enable_du_e2: true                # Enable DU E2 agent (one for each DU instance)
+  e2sm_kpm_enabled: true            # Enable KPM service module
+  e2sm_rc_enabled: true 
+  addr: 10.0.2.10                # RIC IP address
+  bind_addr: 10.0.2.1          # A local IP that the E2 agent binds to for traffic from the RIC. ONLY required if running the RIC on a separate machine. 
+  port: 36421                       # RIC port
+
+log:
+  filename: /tmp/du1.log                                          # Path of the log file.
+  all_level: debug                                                 # Logging level applied to all layers. 
+  
+metrics:
+  autostart_stdout_metrics: false
+  enable_log: false
+  enable_json: true       # Enable reporting metrics in JSON format
+  addr: 127.0.0.1        # Metrics-server IP
+  port: 55555             # Metrics-server Port
+
+  periodicity:
+    du_report_period: 1000
+
+  layers:
+    enable_ru: true
+    enable_sched: true
+    enable_rlc: true
+    enable_mac: true
+    enable_executor: true
+    enable_du_low: false

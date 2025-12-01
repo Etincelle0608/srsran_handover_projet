@@ -1,0 +1,74 @@
+# This example configuration outlines how to configure the srsRAN Project gNB to create a single TDD cell
+# transmitting in band 78, with 20 MHz bandwidth and 30 kHz sub-carrier-spacing. A USRP B200 is configured 
+# as the RF frontend using split 8. Note in this example an external clock source is not used, so the sync 
+# is not defined and the default is used. 
+
+gnb_id: 411                                                     #Optional UINT (411). Sets the numerical ID associated with the gNB.
+gnb_id_bit_length: 22
+ran_node_name: cu_cp_01
+
+
+cu_cp:
+  max_nof_dus: 4                      # Le CU-CP acceptera jusqu'à 2 DUs
+  max_nof_cu_ups: 4                   # Le CU-CP acceptera jusqu'à 2 CU-UPs
+  amf:
+    addr: 10.53.1.2
+    port: 38412                                            # The address or hostname of the AMF.
+    bind_addr: 10.53.1.1                                        # A local IP that the gNB binds to for traffic from the AMF.
+    supported_tracking_areas:                                   # Configure the TA associated with the CU-CP
+      - tac: 7                        
+        plmn_list:
+          - plmn: "00101"
+            tai_slice_support_list:
+              - sst: 1
+  inactivity_timer: 7200        
+
+  f1ap:
+    bind_addr: 127.0.10.1
+
+  mobility:
+    trigger_handover_from_measurements: false                    # Set the CU-CP to trigger handover when neighbor cell measurements arrive
+    cells:                                                      # List of cells available for handover known to the cu-cp
+      - nr_cell_id: 0x66C001                                        # Cell ID for cell 1
+        periodic_report_cfg_id: 1                                 # Set the periodic report configuration ID for this cell
+        ncells:                                                   # Neighbor cell(s) available for handover
+          - nr_cell_id: 0x66C002                                      # Cell ID of neighbor cell available for handover
+            report_configs: [ 2 ]                                   # Report configurations to configure for this neighbor cell
+      - nr_cell_id: 0x66C002                                        # Cell ID for cell 2
+        periodic_report_cfg_id: 1                                 # Set the periodic report configuration ID for this cell
+        ncells:                                                   # Neighbor cell(s) available for handover
+          - nr_cell_id: 0x66C001                                      # Cell ID of neighbor cell available for handover
+            report_configs: [ 2 ]                                   # Report configurations to configure for this neighbor cell
+    report_configs:                           
+      - report_cfg_id: 1                      
+        report_type: periodical               
+        report_interval_ms: 480                 
+      - report_cfg_id: 2                        
+        report_type: event_triggered            
+        event_triggered_report_type: a3                           # Sets the event triggered report type as A3
+        meas_trigger_quantity: rsrp                               # Sets the measurement trigger quantity as rsrp
+        meas_trigger_quantity_offset_db: 6                         # Sets the measurement trigger quantity offset to 3dB
+        hysteresis_db: 3                                          # Sets the hysteresis to 0dB
+        time_to_trigger_ms: 320                                   # Sets the time to trigger to 100ms
+        
+cu_up:
+  f1u:
+    socket:                               # Define UDP/IP socket(s) for F1-U interface.
+      -                                     # Socket 1
+        bind_addr: 127.0.10.1                  # Sets the address that the F1-U socket will bind to.
+        udp:
+          max_rx_msgs: 256 
+
+e2:
+  enable_cu_cp_e2: true                # Optional BOOLEAN (false). Enables the CU-CP E2 agent. Supported: [false, true]. 
+  enable_cu_up_e2: true                # Optional BOOLEAN (false). Enables the CU-UP E2 agent. Supported: [false, true]. 
+  e2sm_kpm_enabled: true            # Enable KPM service module
+  e2sm_rc_enabled: true             # Enable RC service module
+  addr: 10.0.2.10                   # RIC IP address
+  bind_addr: 10.0.2.1               # A local IP that the E2 agent binds to for traffic from the RIC. ONLY required if running the RIC on a separate machine. 
+  port: 36421                       # RIC port
+
+log:
+  filename: /tmp/cu.log
+  all_level: debug
+
